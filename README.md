@@ -28,14 +28,14 @@ else {
 }
 
 
-$size = 22px if condition else 11px;
+§size = 22px if condition else 11px;
 ```
 
 ## Functions
 
 ```
 def function_name (arg){
-	console.log($arg);
+	console.log(§arg);
 	color: §arg;
 }
 
