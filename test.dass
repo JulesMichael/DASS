@@ -1,4 +1,4 @@
-# Commentaire
+// Commentaire
 §bonjour = "this is a var";
 
 if my_condition :
