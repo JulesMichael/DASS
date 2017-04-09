@@ -18,4 +18,4 @@ class Dass{
 	}
 
 }
-$ = new Dass();
+$ = new Dass();$.m(".red","color","red");$.m(".red","background-color","#000");

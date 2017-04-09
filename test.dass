@@ -1,25 +1,4 @@
 // Commentaire
-§bonjour = "this is a var";
-
-if my_condition :
-    §bonjour =  ""
-elif my_condition:
-    ...
-else:
-    ...
-
-§size = 22px if condition else 11px;
-
-function colorChange (§item):
-    §item.color = #FFF;
-
-function creatColor (§color):
-    return §color.add("brightness",10);
-
-h1 :
-    font-size = 10x;
-:hover :
-    font-size = 30x;
-    colorChange(§this);
-:on_click :
-    §hey = "Coucou";
+.red:
+	color: red;
+	background-color: #000;

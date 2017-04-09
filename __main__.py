@@ -96,11 +96,10 @@ class Parser():
                     elif varriableRegex:
                         subject[i] = block(type="variable",name=varriableRegex.group(1),value=varriableRegex.group(4))
                     elif functionRegex:
-                        subject[i] = block(type="function",name=functionRegex.group(1) or None,args = functionRegex.group(3).split(","),content=parse(subject[i+1]))
+                        subject[i] = block(type="function",name=functionRegex.group(1) or "",args = functionRegex.group(3).split(","),content=parse(subject[i+1]))
                         subject[i+1] = None
                     elif regleRegex:
                         subject[i] = block(type="regle",property=regleRegex.group(1),value=regleRegex.group(4))
-                        subject[i+1] = None
                     elif selectorRegex:
                         subject[i] = block(type="selector",selector=selectorRegex.group(1),content=parse(subject[i+1]))
                         subject[i+1] = None
@@ -113,10 +112,38 @@ class Parser():
             return subject
         self.blocks = parse(self.blocks)
 
+    def __toStr(self):
+        """
+        Fourth part of parsing. Trasnform class to JS text.
+        """
+        self.__str__ = open("dass.js","r").read()
+        def parse(subject):
+            toReturn = ""
+            if type(subject) == list:
+                for i in subject:
+                    if i.type == "conditionIf":
+                        toReturn += "if (" + i.condition +") {" + parse(i.content)+"}"
+                    elif i.type == "conditionElse":
+                        toReturn += "else {" + parse(i.content)+"}"
+                    elif i.type == "conditionElif":
+                        toReturn += "if (" + i.condition +") {" + parse(i.content)+"}"
+                    elif i.type == "variable":
+                        toReturn += "var " + i.name + " = " + i.value + ";"
+                    elif i.type == "function":
+                        toReturn += "function " + i.name +"("+",".join(i.args)+"){" + parse(i.content)+"}"
+                    elif i.type == "selector":
+                        for item in i.content:
+                            if item.type != "regle":
+                                toReturn+= parse([item])
+                            else:
+                                toReturn += """$.m("{}","{}","{}");""".format(i.selector.strip(" "),item.property.strip(" "),item.value)
+            return toReturn
+        self.__str__ += parse(self.blocks)
+
 # Usage
-p = Parser(open("test.dass","r").read())
-#print(p.blocks)
-print(p.__str__)
+file = "test.dass"
+p = Parser(open(file,"r").read())
+open(file+".js","w").write(p.__str__)
 
 
 """
@@ -125,16 +152,4 @@ Whene you are codding use:
 
 Whene you are testing use:
 python3 __init__.py
-"""
-
-
-"""
-def pr (l,level = 0):
-    for i in l:
-        if type(i) == str:
-            l = re.sub(r'§(?P<var_name>[A-Za-z0-9_-]*)( )?=( )?(?P<var_value>.*)( )?;',"var \g<var_name> = \g<var_value>;",urllib.parse.unquote_plus(i)) # Déclaration de varriables
-            self.__str__ += "\t"*level + l + '\n' 
-        elif type(i) == list :
-            pr(i,level +1 )
-pr(self.blocks)
 """
