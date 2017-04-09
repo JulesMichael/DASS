@@ -10,10 +10,10 @@ else:
 
 §size = 22px if condition else 11px;
 
-function colorChange(§item):
+function colorChange (§item):
     §item.color = #FFF;
 
-function creatColor(§color):
+function creatColor (§color):
     return §color.add("brightness",10);
 
 h1 :

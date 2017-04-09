@@ -1,0 +1,29 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dass</title>
+  <meta name="description" content="The HTML5 Herald">
+  <meta name="author" content="SitePoint">
+  <script src="dass.js"></script>
+</head>
+
+<body>
+	<div class="red">HEY</div>
+	<script type="text/javascript">
+  		$.m("html","margin","0px");
+  		$.m("body","margin","0px");
+  		$.m("body","padding","0px");
+  		$.m("html","padding","0px");
+  		$.m(".red","background-color","#000");
+  		$.m(".red","color","red");
+  		$.m(".red","padding","10px");
+  		$.m(".red","height","80px");
+  		console.log($.get(".red","height")); // --> get the value
+  		console.log($.get(".red","background-color"));
+      console.log($.get("html","height"));
+      $.onmouseover(".red",function(){
+        console.log("HEY");
+      });
+  	</script>
+</body>
+</html>

@@ -6,18 +6,19 @@ class block(object):
     """
         Ignore that
     """
-    def __init__(self,header=None,content=[],container = None):
-        self.header = header
-        self.content = content
-        self.container = container
+    def __init__(self,**kwargs):
+        self.__dict__.update(kwargs)
 
 class Parser():
     def __init__(self,text):
+        # Vars
         self.text = text
+        self.__str__ = ""
+        # Processing
         self.__creatIndentation()
         self.__creatBlocks()
-        self.__str__ = ""
-        self.__parse()
+        self.__toClass()
+        self.__toStr()
     
     def __creatIndentation(self):
         """
@@ -38,7 +39,7 @@ class Parser():
                     newLine = line
                     lineIndentation = 0
 
-                self.lines.append(newLine)
+                self.lines.append(newLine.strip())
                 self.indentationList.append(lineIndentation)
     
 
@@ -65,22 +66,56 @@ class Parser():
         self.blocks += "]"* (level+1)
         self.blocks = ast.literal_eval(self.blocks)
 
-    def __parse(self):
+    def __toClass(self):
         """
-        Fird part of parsing. Process to text manipulation.
-        Creat js str
+        Fird part of parsing. Transform text into class.
         """
-        def pr (l,level = 0):
-            for i in l:
-                if type(i) == str:
-                    l = re.sub(r'§(?P<var_name>[A-Za-z0-9_-]*)( )?=( )?(?P<var_value>.*)( )?;',"var \g<var_name> = \g<var_value>;",urllib.parse.unquote_plus(i)) # Déclaration de varriables
-                    self.__str__ += "\t"*level + l + '\n' 
-                elif type(i) == list :
-                    pr(i,level +1 )
-        pr(self.blocks)
+        def parse (subject):
+            for i in range(len(subject)):
+                if type(subject[i]) == str:
+                    theStr = urllib.parse.unquote_plus(subject[i])
+                    commentaireRegex = re.match(r"//( )?(.*)", theStr)
+                    conditionIfRegex = re.match(r"if (.*):",theStr)
+                    conditionElseRegex = re.match(r"else()?:",theStr)
+                    conditionElifRegex = re.match(r"elif (.*):",theStr)
+                    varriableRegex = re.match(r"§([A-Za-z0-9_-]*)( )?=( )?(.*)( )?;",theStr)
+                    functionRegex = re.match(r"function (.*)( )?\((.*)\)()?:",theStr)
+                    regleRegex = re.match(r"^(.*)( )?:( )?(.*);",theStr)
+                    selectorRegex = re.match(r"^(.*)( )?:$",theStr)
+                    if commentaireRegex :
+                        subject[i] = block(type="commentaire",value=commentaireRegex.group(2))
+                    elif conditionIfRegex :
+                        subject[i] = block(type="conditionIf",condition=conditionIfRegex.group(1),content=parse(subject[i+1]))
+                        subject[i+1] = None
+                    elif conditionElseRegex :
+                        subject[i] = block(type="conditionElse",content=parse(subject[i+1]))
+                        subject[i+1] = None
+                    elif conditionElifRegex :
+                        subject[i] = block(type="conditionElif",condition=conditionElifRegex.group(1),content=parse(subject[i+1]))
+                        subject[i+1] = None
+                    elif varriableRegex:
+                        subject[i] = block(type="variable",name=varriableRegex.group(1),value=varriableRegex.group(4))
+                    elif functionRegex:
+                        subject[i] = block(type="function",name=functionRegex.group(1) or None,args = functionRegex.group(3).split(","),content=parse(subject[i+1]))
+                        subject[i+1] = None
+                    elif regleRegex:
+                        subject[i] = block(type="regle",property=regleRegex.group(1),value=regleRegex.group(4))
+                        subject[i+1] = None
+                    elif selectorRegex:
+                        subject[i] = block(type="selector",selector=selectorRegex.group(1),content=parse(subject[i+1]))
+                        subject[i+1] = None
+                    else:
+                        subject[i] = block(type="unknown")
+                elif type(subject[i]) == list:
+                    subject[i] = parse(subject[i])
+            while None in subject:
+                subject.remove(None)
+            return subject
+        self.blocks = parse(self.blocks)
 
 # Usage
 p = Parser(open("test.dass","r").read())
+#print(p.blocks)
 print(p.__str__)
 
 
@@ -90,4 +125,16 @@ Whene you are codding use:
 
 Whene you are testing use:
 python3 __init__.py
+"""
+
+
+"""
+def pr (l,level = 0):
+    for i in l:
+        if type(i) == str:
+            l = re.sub(r'§(?P<var_name>[A-Za-z0-9_-]*)( )?=( )?(?P<var_value>.*)( )?;',"var \g<var_name> = \g<var_value>;",urllib.parse.unquote_plus(i)) # Déclaration de varriables
+            self.__str__ += "\t"*level + l + '\n' 
+        elif type(i) == list :
+            pr(i,level +1 )
+pr(self.blocks)
 """
