@@ -34,7 +34,11 @@ else :
 function function_name (arg):
 	console.log(§arg);
 	color: §arg;
+```
 
+## CSS rules
+
+```
 h1 :
 	color : #FFF;
 	background-color: #000;

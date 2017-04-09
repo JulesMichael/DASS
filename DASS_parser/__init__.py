@@ -116,7 +116,7 @@ class Parser():
         """
         Fourth part of parsing. Trasnform class to JS text.
         """
-        self.__str__ = open("dass.js","r").read()
+        self.__str__ = open(__path__[0]+"/dass.js","r").read()
         def parse(subject):
             toReturn = ""
             if type(subject) == list:
@@ -139,17 +139,3 @@ class Parser():
                                 toReturn += """$.m("{}","{}","{}");""".format(i.selector.strip(" "),item.property.strip(" "),item.value)
             return toReturn
         self.__str__ += parse(self.blocks)
-
-# Usage
-file = "test.dass"
-p = Parser(open(file,"r").read())
-open(file+".js","w").write(p.__str__)
-
-
-"""
-Whene you are codding use:
-./autorun.py watch "__main__.py;test.dass" exec "python3 __main__.py"
-
-Whene you are testing use:
-python3 __init__.py
-"""
