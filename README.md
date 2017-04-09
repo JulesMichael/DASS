@@ -4,44 +4,41 @@ Dynamically Awesome StyleSheets
 
 Dass is a SCSS-like and SASS-like project. The goal of the project is to make a dynamic css-like langage. For exemple the langage can be used to make dashboard or web app simply. The langage be parsed by the server. In future we may make the parser with the web browser via Pepper. 
 
-# Ideas of components:
+# Components:
 
 All elements are bound to change.
 
 ## Variables :
 
 ```
-§var = "This is my var";
+§variable = "This is my var";
 ```
 
 ## Conditions :
 
 ```
-if my_condition {
+if my_condition :
 	...
-}
-elif my_condition{
-	...
-}
-else {
-	...
-}
 
+elif my_condition :
+	...
 
-§size = 22px if condition else 11px;
+else :
+	...
+
 ```
 
 ## Functions
 
 ```
-def function_name (arg){
+function function_name (arg):
 	console.log(§arg);
 	color: §arg;
-}
 
-h1 {
-	color §function_name(#FFF);
-}
+h1 :
+	color : #FFF;
+	background-color: #000;
+
 ```
 
 <!---
