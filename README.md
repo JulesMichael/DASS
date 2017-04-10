@@ -10,55 +10,76 @@ All elements are bound to change.
 
 ## Variables :
 
-```
+```css
 §variable = "This is my var";
+```
+
+## Comments
+```css
+// My comment
 ```
 
 ## Conditions :
 
-```
+```css
 if my_condition :
-	...
+    ...
 
 elif my_condition :
-	...
+    ...
 
 else :
-	...
+    ...
 
 ```
 
 ## Functions
 
-```
+```css
 function function_name (arg):
-	console.log(§arg);
-	color: §arg;
+    color: arg;
 ```
 
 ## CSS rules
 
-```
+## Simple
+
+```css
 h1 :
-	color : #FFF;
-	background-color: #000;
+    color : #FFF;
+    background-color: #000;
 
 ```
 
-<!---
-	```
-	§size = 500px
-	§f_size = 20px if §html.width > §size else 10px;
-	
-	§animation = {
-	  transition: 0.5s;
-	}
-	
-	h1 {
-	  if §html.width > §size{
-	    this.add(§animation);
-	  }
-	  font-size: §f_size;
-	}
-	```
--->
+## With events:
+
+```css
+.card:
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 3px;
+
+&:hover :
+    background-color: red;
+    .content :
+        color: #fff;
+```
+
+## In DASS you can execute JS:
+
+```css
+.card:
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 3px;
+
+&:hover :
+    background-color: red;
+    .content :
+        color: #fff;
+    console.log("I'm a javascript line");
+```
+
+# Made with DASS:
+
+![screenshot](https://raw.githubusercontent.com/JulesMichael/DASS/master/screenshot.png)
