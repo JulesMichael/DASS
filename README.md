@@ -82,4 +82,4 @@ h1 :
 
 # Made with DASS:
 
-![screenshot](https://raw.githubusercontent.com/JulesMichael/DASS/master/screenshot.png)
+![screenshot](https://raw.githubusercontent.com/JulesMichael/DASS/master/screen.png)
