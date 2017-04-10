@@ -97,7 +97,7 @@ class Parser():
                     conditionElseRegex = re.match(r"else( )?:", theStr)
                     conditionElifRegex = re.match(r"elif (.*):", theStr)
                     varriableRegex = re.match(
-                        r"§([A-Za-z0-9_-]*)( )?=( )?(.*)( )?;", theStr)
+                        re.escape("$")+r"([A-Za-z0-9_-]*)( )?=( )?(.*)( )?;", theStr)
                     functionRegex = re.match(
                         r"^function (.*)( )?\((.*)\)()?:", theStr)
                     regleRegex = re.match(r"^(.*)( )?:( )?(.*);", theStr)

@@ -10,18 +10,18 @@ All elements are bound to change.
 
 ## Variables :
 
-```css
-§variable = "This is my var";
+```
+$variable = "This is my var";
 ```
 
 ## Comments
-```css
+```
 // My comment
 ```
 
 ## Conditions :
 
-```css
+```
 if my_condition :
     ...
 
@@ -35,7 +35,7 @@ else :
 
 ## Functions
 
-```css
+```
 function function_name (arg):
     color: arg;
 ```
@@ -44,7 +44,7 @@ function function_name (arg):
 
 ## Simple
 
-```css
+```
 h1 :
     color : #FFF;
     background-color: #000;
@@ -53,7 +53,7 @@ h1 :
 
 ## With events:
 
-```css
+```
 .card:
     background-color: #fff;
     padding: 10px;
@@ -67,7 +67,7 @@ h1 :
 
 ## In DASS you can execute JS:
 
-```css
+```
 .card:
     background-color: #fff;
     padding: 10px;
