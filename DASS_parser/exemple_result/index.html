@@ -1,41 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <title>DASS</title>
-  <meta name="description" content="Dass langage">
-  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-  <link href="css/grid.css" rel="stylesheet">
-  <style type="text/css">
-  	html, body{
-  		margin: 0px;
-  	}
-  </style>
+    <meta charset="utf-8">
+    <title>DASS</title>
+    <meta name="description" content="Dass langage">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <style type="text/css">
+        html,
+        body {
+            margin: 0px;
+        }
+    </style>
 </head>
 
-<body>
-	<div class="nav">
-		<div class="title">DASS</div>
-	</div>
-  <div class="container">
-    <div class="row">
-      <div class="col s12 m6 center">
-      <h1>On GitHub</h1>
-        <img src="imgs/github.png">
-      </div>
-      
-      <div class="col s12 m6 center">
-       <h1>Inspired by SASS</h1>
-        <img src="imgs/sass.png">
-      </div>
+<body onresize="column()">
+    <div class="nav">
+        <div class="title">DASS</div>
     </div>
-  <div class="card">
-    <h1>Lorem ipsum</h1>
-    <div class="content">Praesent nec tempus urna, vitae ullamcorper mi. Nulla nunc nisi, luctus egestas lectus eget, feugiat sagittis nulla. Phasellus feugiat interdum aliquam. Donec tincidunt sem vitae tortor tristique, in gravida turpis malesuada. Integer tellus turpis, malesuada in elit eget, finibus placerat urna. Nunc interdum consectetur eros, at iaculis arcu suscipit sit amet. Curabitur commodo eu libero elementum iaculis. Curabitur non imperdiet metus, vel convallis arcu. Donec ac velit imperdiet dolor consectetur cursus. Suspendisse a varius quam, pretium commodo justo. Nullam dignissim dapibus tortor, eget consectetur justo pellentesque quis.</div>
-  </div>
-  </div>
-  
-  <script src="tiny.js"></script>
-  <script src="test.js"></script>
+    <div class="container">
+        <div class="masonry">
+            <div class="item">
+                <div class="container">
+                    <h1><a id="DASS_0">DASS</a></h1>
+                    <p>Dynamically Awesome StyleSheets</p>
+                    <p>Dass is a SCSS-like and SASS-like project. The goal of the project is to make a dynamic css-like langage. For exemple the langage can be used to make dashboard or web app simply. The langage be parsed by the server. In future we may make the parser with the web browser via Pepper.</p>
+                    <h1>
+                        <a id="Why_DASS_and_not_just_CSS_and_JS__7"></a>Why DASS and not just CSS and JS ?</h1>
+                    <p>DASS was designed to create webapp and interactive dashboard. DASS wasn’t mode for all your projects.</p>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <h1>
+                        <a id="Components_11"></a>Components:</h1>
+                    <p>All elements are bound to change.</p>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <h2>
+                        <a id="Variables__15"></a>Variables :</h2>
+                    <pre><code>$variable = &quot;This is my var&quot;;
+</code></pre>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <h2>
+                        <a id="Comments_21"></a>Comments:</h2>
+                    <pre><code>// My comment
+</code></pre>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <h2>
+                        <a id="Conditions__26"></a>Conditions:</h2>
+                    <pre><code>if my_condition :
+    ...
+
+elif my_condition :
+    ...
+
+else :
+    ...
+</code></pre>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <h2>
+                        <a id="Functions_40"></a>Functions:</h2>
+                    <pre><code>function function_name (arg):
+    color: arg;
+</code></pre>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <h2>
+                        <a id="CSS_rules_47"></a>CSS rules:</h2>
+                    <h2>
+                        <a id="Simple_49"></a>Simple:</h2>
+                    <pre><code>h1 :
+    color : #FFF;
+    background-color: #000;
+</code></pre>
+                    <h2>
+                        <a id="With_events_58"></a>With events:</h2>
+                    <pre><code>.card:
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 3px;
+
+&amp;:hover :
+    background-color: red;
+    .content :
+        color: #fff;
+</code></pre>
+                </div>
+            </div>
+            <div class="item">
+                <div class="container">
+                    <h2>
+                        <a id="In_DASS_you_can_execute_JS_72"></a>In DASS you can execute JS:</h2>
+                    <pre><code>.card:
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 3px;
+
+&amp;:hover :
+    background-color: red;
+    .content :
+        color: #fff;
+    console.log(&quot;I'm a javascript line&quot;);
+</code></pre>
+                </div>
+            </div>
+            <div class="item" onclick="changeColor()" >
+                <div class="container btn">Try ! Change colors.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="tiny.js"></script>
+    <script src="test.js"></script>
 </body>
+
 </html>
