@@ -88,3 +88,4 @@ h1 :
 # Made with DASS:
 
 ![screenshot](https://raw.githubusercontent.com/JulesMichael/DASS/master/screen.png)
+![screenshot](https://raw.githubusercontent.com/JulesMichael/DASS/master/screen-2.png)
