@@ -1,19 +1,22 @@
-# DASS
-Dynamically Awesome StyleSheets
+# Dynamically Awesome StyleSheets
 
-
+<!-- 
 Dass is a SCSS-like and SASS-like project. The goal of the project is to make a dynamic css-like langage. For exemple the langage can be used to make dashboard or web app simply. The langage be parsed by the server. In future we may make the parser with the web browser via Pepper. 
+ -->
 
+DASS is a tool for creating web projects easily
 
-#Why DASS and not just CSS and JS ?
+# Why DASS ?
 
-DASS was designed to create webapp and interactive dashboard. DASS wasn't mode for all your projects.
+Current web technology requires us to separate the CSS from the JS. 
+
+DASS was designed to create webapp and interactive dashboard. DASS wasn't made for all your projects.
 
 # Components:
 
 All elements are bound to change.
 
-## Variables 
+## Variables
 
 ```
 $variable = "This is my var";
@@ -41,8 +44,8 @@ else :
 ## Functions:
 
 ```
-function function_name (arg):
-    color: arg;
+function functionName (arg):
+    style("h1","color",arg);
 ```
 
 ## CSS rules:
@@ -88,4 +91,4 @@ h1 :
 # Made with DASS:
 
 ![screenshot](https://raw.githubusercontent.com/JulesMichael/DASS/master/screen.png)
-![screenshot](https://raw.githubusercontent.com/JulesMichael/DASS/master/screen-2.png)
+![screenshot-2](https://raw.githubusercontent.com/JulesMichael/DASS/master/screen-2.png)
