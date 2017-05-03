@@ -1,15 +1,25 @@
 import re
 import ast
 import urllib.parse
+import os
+from hamlpy.hamlpy import Compiler
+import shutil
+
+
+#
+# TEMPLATE FOR BLOCKS
+#
 
 
 class block(object):
-    """
-        Ignore that
-    """
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+
+#
+# DASS PARSER
+#
 
 
 class Parser():
@@ -21,7 +31,7 @@ class Parser():
         self.mode = mode
         self.vars = {}
         # Processing
-        try :
+        try:
             self.__creatIndentation()
             self.__creatBlocks()
             self.__toClass()
@@ -35,7 +45,6 @@ class Parser():
         """
         First part of parsing. Find indentation for all lines.
         """
-        datas = dict()
         self.indentationList = []
         self.lines = []
         for line in self.text.split("\n"):
@@ -97,7 +106,7 @@ class Parser():
                     conditionElseRegex = re.match(r"else( )?:", theStr)
                     conditionElifRegex = re.match(r"elif (.*):", theStr)
                     varriableRegex = re.match(
-                        re.escape("$")+r"([A-Za-z0-9_-]*)( )?=( )?(.*)( )?;", theStr)
+                        re.escape("$") + r"([A-Za-z0-9_-]*)( )?=( )?(.*)( )?;", theStr)
                     functionRegex = re.match(
                         r"^function (.*)( )?\((.*)\)()?:", theStr)
                     regleRegex = re.match(r"^(.*)( )?:( )?(.*);", theStr)
@@ -151,6 +160,7 @@ class Parser():
         dassJsMin = list(map(lambda line: line.strip(" "), dassJsMin))
         dassJsMin = list(map(lambda line: line.strip("\t"), dassJsMin))
         dassJsMin = "".join(dassJsMin)
+
         def parse(subject):
             toReturn = ""
             if type(subject) == list:
@@ -214,3 +224,62 @@ class Parser():
                                   "\" mode doesn't exist.")
             return toReturn
         self.__str__ = dassJsMin + parse(self.blocks)
+        return self.__str__
+
+#
+# Compile a project
+#
+
+
+def parseHaml(raw_text):
+    c = Compiler()
+    return c.process(raw_text)
+
+
+def parseDass(raw_text):
+    return Parser(raw_text).__str__
+
+
+def compileProject(baseDir,destination = None ):
+    # Check if dir exists and make it
+    if not destination:
+        destination = os.path.dirname(baseDir) if os.path.dirname(
+            baseDir) != "" else baseDir + "_output"
+    if os.path.exists(destination):
+        shutil.rmtree(destination)
+    os.mkdir(destination)
+    # Create lists of files
+
+    files = list()
+    dassFiles = list()
+    otherFiles = list()
+    hamlFiles = list()
+    for entry in os.walk(baseDir):
+        for i in entry[2]:
+            files.append(os.path.join(entry[0], i))
+    for path in files:
+        b = os.path.splitext(path)
+        extension = b[1]
+        if extension in [".dass", ".DASS"]:
+            dassFiles.append(path)
+        elif extension in [".haml", ".HAML"]:
+            hamlFiles.append(path)
+        else:
+            otherFiles.append(path)
+
+    # Parse files and creat new files
+
+    for file in otherFiles:
+        shutil.copyfile(file, file.replace(baseDir, destination))
+
+    for file in dassFiles:
+        d = file.replace(baseDir, destination)
+        fileContent = parseDass(open(file, "r").read())
+        open(d.replace(os.path.splitext(d)[1], ".js"), "w").write(
+            fileContent)
+
+    for file in hamlFiles:
+        d = file.replace(baseDir, destination)
+        fileContent = parseHaml(open(file, "r").read())
+        open(d.replace(os.path.splitext(d)[1], ".html"), "w").write(
+            fileContent)
