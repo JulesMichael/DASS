@@ -21,6 +21,13 @@ class block(object):
 # DASS PARSER
 #
 
+class js():
+    def style(selector, property, value):
+        s = """style("{selector}","{property}","{value}");"""
+        s = s.format(selector=selector, property=property, value=value)
+        return s
+
+
 
 class Parser():
 
@@ -39,6 +46,7 @@ class Parser():
         except Exception as e:
             print("[ERROR]: File can't be parsed.")
             print(e)
+
             exit()
 
     def __creatIndentation(self):
@@ -106,7 +114,7 @@ class Parser():
                     conditionElseRegex = re.match(r"else( )?:", theStr)
                     conditionElifRegex = re.match(r"elif (.*):", theStr)
                     varriableRegex = re.match(
-                        re.escape("$") + r"([A-Za-z0-9_-]*)( )?=( )?(.*)( )?;", theStr)
+                        re.escape("$") + r"([A-Za-z0-9_-]*)( )?=( )?(.*)", theStr)
                     functionRegex = re.match(
                         r"^function (.*)( )?\((.*)\)()?:", theStr)
                     regleRegex = re.match(r"^(.*)( )?:( )?(.*);", theStr)
@@ -161,32 +169,34 @@ class Parser():
         dassJsMin = list(map(lambda line: line.strip("\t"), dassJsMin))
         dassJsMin = "".join(dassJsMin)
 
-        def parse(subject):
+        def blockToJS(subject):
             toReturn = ""
-            if type(subject) == list:
-                for i in subject:
+            for i in subject:
+                if type(i) != list:
                     if i.type == "conditionIf":
                         toReturn += "if (" + i.condition + \
-                            ") {" + parse(i.content) + "}"
+                            ") {" + blockToJS(i.content) + "}"
                     elif i.type == "conditionElse":
-                        toReturn += "else {" + parse(i.content) + "}"
+                        toReturn += "else {" + blockToJS(i.content) + "}"
                     elif i.type == "conditionElif":
                         toReturn += "if (" + i.condition + \
-                            ") {" + parse(i.content) + "}"
+                            ") {" + blockToJS(i.content) + "}"
                     elif i.type == "variable":
                         toReturn += "var " + i.name + " = " + i.value + ";"
                     elif i.type == "function":
                         toReturn += "function " + i.name + \
                             "(" + ",".join(i.args) + \
-                            "){" + parse(i.content) + "}"
+                            "){" + blockToJS(i.content) + "}"
                     elif i.type == "selector":
                         if i.selector.strip(" ")[0] != "&":
                             for item in i.content:
                                 if item.type == "regle":
-                                    toReturn += """style("{}","{}","{}");""".format(
-                                        i.selector.strip(" "), item.property.strip(" "), item.value)
+                                    selector = i.selector.strip(" ")
+                                    property = item.property.strip(" ")
+                                    value = item.value
+                                    toReturn += js.style(selector, property, value)
                                 else:
-                                    toReturn += parse([item])
+                                    toReturn += blockToJS([item])
                         else:
                             newSelector = subject[
                                 subject.index(i) - 1].selector
@@ -195,20 +205,24 @@ class Parser():
                                     selector=newSelector)
                                 for item in i.content:
                                     if item.type == "regle":
-                                        toReturn += """style("{selector}","{property}","{value}");""".format(
-                                            selector=newSelector, property=item.property, value=item.value)
+                                        selector = newSelector
+                                        property = item.property.strip(" ")
+                                        value = item.value
+                                        toReturn += js.style(selector, property, value)
                                     else:
-                                        toReturn += parse([item])
+                                        toReturn += blockToJS([item])
                                 toReturn += "});"
                             elif i.selector.strip(" ")[1:] == ":unhover":
                                 toReturn += """onmouseout("{selector}",function (){{""".format(
                                     selector=newSelector)
                                 for item in i.content:
                                     if item.type == "regle":
-                                        toReturn += """style("{selector}","{property}","{value}");""".format(
-                                            selector=newSelector, property=item.property, value=item.value)
+                                        selector = newSelector
+                                        property = item.property.strip(" ")
+                                        value = item.value
+                                        toReturn += js.style(selector, property, value)
                                     else:
-                                        toReturn += parse([item])
+                                        toReturn += blockToJS([item])
                                 toReturn += "});"
 
                         if i.selector.strip(" ")[1:] in [":hover", ":unhover"]:
@@ -223,7 +237,7 @@ class Parser():
                             print("[ERROR]: \"" + self.mode +
                                   "\" mode doesn't exist.")
             return toReturn
-        self.__str__ = dassJsMin + parse(self.blocks)
+        self.__str__ = dassJsMin + blockToJS(self.blocks)
         return self.__str__
 
 #
@@ -240,7 +254,7 @@ def parseDass(raw_text):
     return Parser(raw_text).__str__
 
 
-def compileProject(baseDir,destination = None ):
+def compileProject(baseDir, destination=None):
     # Check if dir exists and make it
     if not destination:
         destination = os.path.dirname(baseDir) if os.path.dirname(
@@ -251,6 +265,7 @@ def compileProject(baseDir,destination = None ):
     # Create lists of files
 
     files = list()
+    # folder = list() => TODO
     dassFiles = list()
     otherFiles = list()
     hamlFiles = list()
@@ -262,12 +277,12 @@ def compileProject(baseDir,destination = None ):
         extension = b[1]
         if extension in [".dass", ".DASS"]:
             dassFiles.append(path)
-        elif extension in [".haml", ".HAML"]:
+        elif extension in [".haml", ".HAML", ".PHP", ".php"]:
             hamlFiles.append(path)
         else:
             otherFiles.append(path)
 
-    # Parse files and creat new files
+    # Parse files and create new files
 
     for file in otherFiles:
         shutil.copyfile(file, file.replace(baseDir, destination))
@@ -281,5 +296,5 @@ def compileProject(baseDir,destination = None ):
     for file in hamlFiles:
         d = file.replace(baseDir, destination)
         fileContent = parseHaml(open(file, "r").read())
-        open(d.replace(os.path.splitext(d)[1], ".html"), "w").write(
+        open(d.replace(os.path.splitext(d)[1], ".html" if os.path.splitext(d)[1] in [".haml", ".HAML"] else os.path.splitext(d)[1].lower()), "w").write(
             fileContent)
