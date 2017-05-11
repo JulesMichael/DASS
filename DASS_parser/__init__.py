@@ -28,15 +28,15 @@ class js():
         return s
 
 
-
 class Parser():
 
-    def __init__(self, text, mode="lax"):
+    def __init__(self, text, mode="lax", min=True):
         # Vars
         self.text = text
         self.__str__ = ""
         self.mode = mode
         self.vars = {}
+        self.min = min
         # Processing
         try:
             self.__creatIndentation()
@@ -46,7 +46,6 @@ class Parser():
         except Exception as e:
             print("[ERROR]: File can't be parsed.")
             print(e)
-
             exit()
 
     def __creatIndentation(self):
@@ -151,7 +150,12 @@ class Parser():
                             1), content=parse(subject[i + 1]))
                         subject[i + 1] = None
                     else:
-                        subject[i] = block(type="unknown", value=theStr)
+                        content = ""
+                        if (i + 1) < len(subject):
+                            if type(subject[i + 1]) == list:
+                                content = parse(subject[i + 1])
+                                subject[i + 1] = None
+                        subject[i] = block(type="unknown", value=theStr, content = content)
                 elif type(subject[i]) == list:
                     subject[i] = parse(subject[i])
             while None in subject:
@@ -164,80 +168,92 @@ class Parser():
         Fourth part of parsing. Transform class to JS text.
         """
         dassJs = open("dass.js", "r").read()
-        dassJsMin = dassJs.split("\n")
-        dassJsMin = list(map(lambda line: line.strip(" "), dassJsMin))
-        dassJsMin = list(map(lambda line: line.strip("\t"), dassJsMin))
-        dassJsMin = "".join(dassJsMin)
+        if self.min:
+            dassJs = dassJs.split("\n")
+            dassJs = list(map(lambda line: line.strip(" "), dassJs))
+            dassJs = list(map(lambda line: line.strip("\t"), dassJs))
+            dassJs = "".join(dassJs)
 
         def blockToJS(subject):
             toReturn = ""
-            for i in subject:
-                if type(i) != list:
-                    if i.type == "conditionIf":
-                        toReturn += "if (" + i.condition + \
-                            ") {" + blockToJS(i.content) + "}"
-                    elif i.type == "conditionElse":
-                        toReturn += "else {" + blockToJS(i.content) + "}"
-                    elif i.type == "conditionElif":
-                        toReturn += "if (" + i.condition + \
-                            ") {" + blockToJS(i.content) + "}"
-                    elif i.type == "variable":
-                        toReturn += "var " + i.name + " = " + i.value + ";"
-                    elif i.type == "function":
-                        toReturn += "function " + i.name + \
-                            "(" + ",".join(i.args) + \
-                            "){" + blockToJS(i.content) + "}"
-                    elif i.type == "selector":
-                        if i.selector.strip(" ")[0] != "&":
-                            for item in i.content:
-                                if item.type == "regle":
-                                    selector = i.selector.strip(" ")
-                                    property = item.property.strip(" ")
-                                    value = item.value
-                                    toReturn += js.style(selector, property, value)
-                                else:
-                                    toReturn += blockToJS([item])
-                        else:
-                            newSelector = subject[
-                                subject.index(i) - 1].selector
-                            if i.selector.strip(" ")[1:] == ":hover":
-                                toReturn += """onmouseover("{selector}",function (){{""".format(
-                                    selector=newSelector)
+            if type(subject) == list:
+                for i in subject:
+                    if type(i) == block:
+                        if i.type == "conditionIf":
+                            toReturn += "if (" + i.condition + \
+                                ") {" + blockToJS(i.content) + "}"
+                        elif i.type == "conditionElse":
+                            toReturn += "else {" + blockToJS(i.content) + "}"
+                        elif i.type == "conditionElif":
+                            toReturn += "if (" + i.condition + \
+                                ") {" + blockToJS(i.content) + "}"
+                        elif i.type == "variable":
+                            toReturn += "var " + i.name + " = " + i.value + ";"
+                        elif i.type == "function":
+                            toReturn += "function " + i.name + \
+                                "(" + ",".join(i.args) + \
+                                "){" + blockToJS(i.content) + "}"
+                        elif i.type == "selector":
+                            if i.selector.strip(" ")[0] != "&":
                                 for item in i.content:
                                     if item.type == "regle":
-                                        selector = newSelector
+                                        selector = i.selector.strip(" ")
                                         property = item.property.strip(" ")
                                         value = item.value
-                                        toReturn += js.style(selector, property, value)
+                                        toReturn += js.style(selector,
+                                                             property, value)
                                     else:
                                         toReturn += blockToJS([item])
-                                toReturn += "});"
-                            elif i.selector.strip(" ")[1:] == ":unhover":
-                                toReturn += """onmouseout("{selector}",function (){{""".format(
-                                    selector=newSelector)
-                                for item in i.content:
-                                    if item.type == "regle":
-                                        selector = newSelector
-                                        property = item.property.strip(" ")
-                                        value = item.value
-                                        toReturn += js.style(selector, property, value)
-                                    else:
-                                        toReturn += blockToJS([item])
-                                toReturn += "});"
+                            else:
+                                newSelector = subject[
+                                    subject.index(i) - 1].selector
+                                if i.selector.strip(" ")[1:] == ":hover":
+                                    toReturn += """onmouseover("{selector}",function (){{""".format(
+                                        selector=newSelector)
+                                    for item in i.content:
+                                        if item.type == "regle":
+                                            selector = newSelector
+                                            property = item.property.strip(" ")
+                                            value = item.value
+                                            toReturn += js.style(selector,
+                                                                 property, value)
+                                        else:
+                                            toReturn += blockToJS([item])
+                                    toReturn += "});"
+                                elif i.selector.strip(" ")[1:] == ":unhover":
+                                    toReturn += """onmouseout("{selector}",function (){{""".format(
+                                        selector=newSelector)
+                                    for item in i.content:
+                                        if item.type == "regle":
+                                            selector = newSelector
+                                            property = item.property.strip(" ")
+                                            value = item.value
+                                            toReturn += js.style(selector,
+                                                                 property, value)
+                                        else:
+                                            toReturn += blockToJS([item])
+                                    toReturn += "});"
 
-                        if i.selector.strip(" ")[1:] in [":hover", ":unhover"]:
-                            i.selector = newSelector
-                    elif i.type == "unknown":
-                        if self.mode == "lax":
-                            toReturn += i.value
-                        elif self.mode == "strict":
-                            print("[ERROR]: \"" + i.value +
-                                  "\" can't be parsed")
-                        else:
-                            print("[ERROR]: \"" + self.mode +
-                                  "\" mode doesn't exist.")
+                            if i.selector.strip(" ")[1:] in [":hover", ":unhover"]:
+                                i.selector = newSelector
+                        elif i.type == "unknown":
+                            if self.mode == "lax":
+
+                                toReturn += i.value
+                                toReturn += ("".join(list(map(lambda i: blockToJS(i),i.content))))
+
+                            elif self.mode == "strict":
+                                print("[ERROR]: \"" + i.value +
+                                      "\" can't be parsed")
+                            else:
+                                print("[ERROR]: \"" + self.mode +
+                                      "\" mode doesn't exist.")
+                    elif type(subject) == list:
+                        toReturn += blockToJS(i)
+            elif type(subject) == block:
+                toReturn += blockToJS([subject])
             return toReturn
-        self.__str__ = dassJsMin + blockToJS(self.blocks)
+        self.__str__ = dassJs + blockToJS(self.blocks)
         return self.__str__
 
 #
@@ -250,11 +266,18 @@ def parseHaml(raw_text):
     return c.process(raw_text)
 
 
-def parseDass(raw_text):
-    return Parser(raw_text).__str__
+def parseDass(raw_text, min):
+    return Parser(raw_text, min=min).__str__
 
 
-def compileProject(baseDir, destination=None):
+def compileProject(baseDir, destination=None, min=True):
+
+    if os.path.exists(os.path.join(baseDir, "datas.json")):
+        pass
+        # TO DO => JINJA2 => TEMPLATE RENDER
+        ## template = Template('Hello {{ name }}!')
+        ## template.render(name='John Doe')
+
     # Check if dir exists and make it
     if not destination:
         destination = os.path.dirname(baseDir) if os.path.dirname(
@@ -289,7 +312,7 @@ def compileProject(baseDir, destination=None):
 
     for file in dassFiles:
         d = file.replace(baseDir, destination)
-        fileContent = parseDass(open(file, "r").read())
+        fileContent = parseDass(open(file, "r").read(), min)
         open(d.replace(os.path.splitext(d)[1], ".js"), "w").write(
             fileContent)
 
