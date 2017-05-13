@@ -7,46 +7,88 @@ import shutil
 
 
 #
-# TEMPLATE FOR BLOCKS
+# BLOCKS
 #
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 class block(object):
-
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+    def size(self, value: str):
+        self.type = "size"
+        self.str = '"{value}"'.format(value=value)
+        sizeRegex = re.match("(?P<number>[0-9]*)(?P<unit>.*)", value)
+        self.int = int(sizeRegex.group("number"))
+        self.unit = sizeRegex.group("unit")
+        return self
 
-#
-# DASS PARSER
-#
 
 class js():
-    def style(selector, property, value):
-        s = """style("{selector}","{property}","{value}");"""
-        s = s.format(selector=selector, property=property, value=value)
-        return s
+    def style(selector: str, property: str, value: str):
+        style = """style("{selector}","{property}","{value}");"""
+        style = style.format(selector=selector, property=property, value=value)
+        return style
+
+    def function(name: str, content: str, args: list = list()):
+        function += "function " + name + \
+            "(" + ",".join(args) + \
+            "){" + blockToJS(content) + "}"
+
+#
+# Regex
+#
+
+
+def matchWith(strToTest: str):
+    # "varriable": re.escape("$") + r"^(?P<type>\w*)\s(?P<name>[A-Za-z0-9_-]*)\s?=\s?(?P<value>.*);$"
+    regexs = {
+        "commentaire": r"^//\s?(?P<comment>.*)$",
+        "conditionIf": r"^if (.*):",
+        "conditionElse": r"^else\s?:",
+        "conditionElif": r"^elif (.*):",
+        "varriable": r"^(?P<type>\w*)\s(?P<name>[A-Za-z0-9_-]*)\s?=\s?(?P<value>.*);",
+        "function": r"^function (?P<name>.*)\s?\((?P<args>.*)\)()?:",
+        "regle": r"^(?P<property>.*)\s?:\s?(?P<value>.*);",
+        "selector": r"^[^(//)](?P<selector>.*)\s?:$"
+    }
+    for regexName, regex in regexs.items():
+        attempt = re.match(regex, strToTest)
+        if attempt:
+            return (regexName, attempt)
+    return False
 
 
 class Parser():
 
-    def __init__(self, text, mode="lax", min=True):
+    def __init__(self, text, mode: str = "lax", min: bool=True):
         # Vars
         self.text = text
         self.__str__ = ""
         self.mode = mode
         self.vars = {}
+        self.selector = {}
         self.min = min
         # Processing
-        try:
-            self.__creatIndentation()
-            self.__creatBlocks()
-            self.__toClass()
-            self.__toStr()
-        except Exception as e:
-            print("[ERROR]: File can't be parsed.")
-            print(e)
-            exit()
+        # try:
+        self.__creatIndentation()
+        self.__creatBlocks()
+        self.__toClass()
+        self.__toStr()
+        # except Exception as e:
+        #     print("[ERROR]: File can't be parsed.")
+        #     print(e)
+        #     exit()
 
     def __creatIndentation(self):
         """
@@ -93,12 +135,7 @@ class Parser():
                 self.blocks += "," + '"' + urllib.parse.quote_plus(i[0]) + '"'
             indentation = i[1]
         self.blocks += "]" * (level + 1)
-        try:
-            self.blocks = ast.literal_eval(self.blocks)
-        except Exception as e:
-            print("[ERROR]: File can't be parsed.")
-            print(e)
-            exit()
+        self.blocks = ast.literal_eval(self.blocks)
 
     def __toClass(self):
         """
@@ -107,55 +144,78 @@ class Parser():
         def parse(subject):
             for i in range(len(subject)):
                 if type(subject[i]) == str:
-                    theStr = urllib.parse.unquote_plus(subject[i])
-                    commentaireRegex = re.match(r"//( )?(.*)", theStr)
-                    conditionIfRegex = re.match(r"if (.*):", theStr)
-                    conditionElseRegex = re.match(r"else( )?:", theStr)
-                    conditionElifRegex = re.match(r"elif (.*):", theStr)
-                    varriableRegex = re.match(
-                        re.escape("$") + r"([A-Za-z0-9_-]*)( )?=( )?(.*)", theStr)
-                    functionRegex = re.match(
-                        r"^function (.*)( )?\((.*)\)()?:", theStr)
-                    regleRegex = re.match(r"^(.*)( )?:( )?(.*);", theStr)
-                    selectorRegex = re.match(r"^(.*)( )?:$", theStr)
-                    if commentaireRegex:
-                        subject[i] = block(
-                            type="commentaire", value=commentaireRegex.group(2))
-                    elif conditionIfRegex:
-                        subject[i] = block(type="conditionIf", condition=conditionIfRegex.group(
-                            1), content=parse(subject[i + 1]))
-                        subject[i + 1] = None
-                    elif conditionElseRegex:
-                        subject[i] = block(
-                            type="conditionElse", content=parse(subject[i + 1]))
-                        subject[i + 1] = None
-                    elif conditionElifRegex:
-                        subject[i] = block(type="conditionElif", condition=conditionElifRegex.group(
-                            1), content=parse(subject[i + 1]))
-                        subject[i + 1] = None
-                    elif varriableRegex:
-                        subject[i] = block(type="variable", name=varriableRegex.group(
-                            1), value=varriableRegex.group(4))
-                        self.vars[varriableRegex.group(
-                            1)] = varriableRegex.group(4)
-                    elif functionRegex:
-                        subject[i] = block(type="function", name=functionRegex.group(
-                            1) or "", args=functionRegex.group(3).split(","), content=parse(subject[i + 1]))
-                        subject[i + 1] = None
-                    elif regleRegex:
-                        subject[i] = block(type="regle", property=regleRegex.group(
-                            1), value=regleRegex.group(4))
-                    elif selectorRegex:
-                        subject[i] = block(type="selector", selector=selectorRegex.group(
-                            1), content=parse(subject[i + 1]))
-                        subject[i + 1] = None
+                    line = urllib.parse.unquote_plus(subject[i]).strip()
+                    isMatched = matchWith(line)
+                    if isMatched:
+                        matchedRegex = isMatched[0]
+                        matchedGroups = isMatched[1]
+                        blockType = matchedRegex
+                        if matchedRegex == "commentaire":
+                            subject[i] = block(
+                                value=matchedGroups.group("comment")
+                            )
+                        elif matchedRegex == "conditionIf":
+                            subject[i] = block(
+                                condition=matchedGroups.group(1),
+                                content=parse(subject[i + 1])
+                            )
+
+                        elif matchedRegex == "conditionElse":
+                            subject[i] = block(
+                                content=parse(subject[i + 1])
+                            )
+                        elif matchedRegex == "conditionElif":
+                            subject[i] = block(
+                                condition=matchedGroups.group(1),
+                                content=parse(subject[i + 1])
+                            )
+                        elif matchedRegex == "varriable":
+                            name = matchedGroups.group("name")
+                            try:
+                                value = getattr(
+                                    block(),
+                                    matchedGroups.group("type")
+                                )(
+                                    matchedGroups.group("value")
+                                )
+                            except AttributeError:
+                                value = matchedGroups.group("value")
+
+                            subject[i] = block(
+                                name=name,
+                                value=value
+                            )
+                            self.vars[name] = value
+                        elif matchedRegex == "function":
+                            subject[i] = block(
+                                name=matchedGroups.group("name") or "",
+                                args=matchedGroups.group("args").split(","),
+                                content=parse(subject[i + 1])
+                            )
+                        elif matchedRegex == "regle":
+                            subject[i] = block(
+                                property=matchedGroups.group("property"),
+                                value=matchedGroups.group("value")
+                            )
+                        elif matchedRegex == "selector":
+                            subject[i] = block(
+                                selector=matchedGroups.group("selector"),
+                                content=parse(subject[i + 1])
+                            )
                     else:
+                        blockType = "unknown"
                         content = ""
                         if (i + 1) < len(subject):
                             if type(subject[i + 1]) == list:
                                 content = parse(subject[i + 1])
-                                subject[i + 1] = None
-                        subject[i] = block(type="unknown", value=theStr, content = content)
+                        subject[i] = block(
+                            value=line,
+                            content=content
+                        )
+                    if subject[i].__dict__.get("content", "") != "":
+                        subject[i + 1] = None
+                    subject[i].type = blockType
+
                 elif type(subject[i]) == list:
                     subject[i] = parse(subject[i])
             while None in subject:
@@ -188,11 +248,17 @@ class Parser():
                             toReturn += "if (" + i.condition + \
                                 ") {" + blockToJS(i.content) + "}"
                         elif i.type == "variable":
-                            toReturn += "var " + i.name + " = " + i.value + ";"
+                            if type(i.value) == block:
+                                value = i.value.str
+                            else:
+                                value = i.value
+                            toReturn += "var " + i.name + " = " + value + ";"
                         elif i.type == "function":
-                            toReturn += "function " + i.name + \
-                                "(" + ",".join(i.args) + \
-                                "){" + blockToJS(i.content) + "}"
+                            toReturn += js.function(
+                                i.name,
+                                blockToJS(i.content),
+                                args=i.args
+                            )
                         elif i.type == "selector":
                             if i.selector.strip(" ")[0] != "&":
                                 for item in i.content:
@@ -240,7 +306,7 @@ class Parser():
                             if self.mode == "lax":
 
                                 toReturn += i.value
-                                toReturn += ("".join(list(map(lambda i: blockToJS(i),i.content))))
+                                toReturn += ("".join(list(map(lambda i: blockToJS(i), i.content))))
 
                             elif self.mode == "strict":
                                 print("[ERROR]: \"" + i.value +
