@@ -26,11 +26,24 @@ class block(object):
         self.__dict__.update(kwargs)
 
     def size(self, value: str):
-        self.type = "size"
+        self.type = "variable"
         self.str = '"{value}"'.format(value=value)
         sizeRegex = re.match("(?P<number>[0-9]*)(?P<unit>.*)", value)
         self.int = int(sizeRegex.group("number"))
         self.unit = sizeRegex.group("unit")
+        return self
+
+    def regle(self, value: str):
+        self.type = "variable"
+        simpleRegleRegex = r"^\[{0}(?P<property>[A-Za-z-]*)\s?:\s?(?P<value>.*)\]{0}$"
+        multipleRegleRegex = r"^\[(?P<reglesList>.*)\]$"
+        simpleRegle = re.match(simpleRegleRegex, value)
+        multipleRegle = re.match(multipleRegleRegex, value)
+        if simpleRegle:
+            self.str = '"{value}"'.format(value=value)
+        elif multipleRegle:
+            reglesList = multipleRegle.group("reglesList").split(";")
+            self.str = str(reglesList)
         return self
 
 
@@ -41,26 +54,27 @@ class js():
         return style
 
     def function(name: str, content: str, args: list = list()):
-        function += "function " + name + \
+        function = "function " + name + \
             "(" + ",".join(args) + \
             "){" + blockToJS(content) + "}"
+        return function
 
 #
 # Regex
 #
 
 
-def matchWith(strToTest: str):
-    # "varriable": re.escape("$") + r"^(?P<type>\w*)\s(?P<name>[A-Za-z0-9_-]*)\s?=\s?(?P<value>.*);$"
+def lineMatchWith(strToTest: str):
+    # "variable": re.escape("$") + r"^(?P<type>\w*)\s(?P<name>[A-Za-z0-9_-]*)\s?=\s?(?P<value>.*);$"
     regexs = {
         "commentaire": r"^//\s?(?P<comment>.*)$",
-        "conditionIf": r"^if (.*):",
-        "conditionElse": r"^else\s?:",
-        "conditionElif": r"^elif (.*):",
-        "varriable": r"^(?P<type>\w*)\s(?P<name>[A-Za-z0-9_-]*)\s?=\s?(?P<value>.*);",
-        "function": r"^function (?P<name>.*)\s?\((?P<args>.*)\)()?:",
-        "regle": r"^(?P<property>.*)\s?:\s?(?P<value>.*);",
-        "selector": r"^[^(//)](?P<selector>.*)\s?:$"
+        "conditionIf": r"^if (.*):$",
+        "conditionElse": r"^else\s?:$",
+        "conditionElif": r"^elif (.*):$",
+        "variable": r"^(?P<type>\w*)\s(?P<name>[A-Za-z0-9_-]*)\s?=\s?(?P<value>.*);$",
+        "function": r"^function (?P<name>.*)\s?\((?P<args>.*)\)()?:$",
+        "regle": r"^(?P<property>[\w-]*)\s?:\s?(?P<value>.*);$",
+        "selector": r"^(//){0}(?P<selector>[\w \.#,]+):$"
     }
     for regexName, regex in regexs.items():
         attempt = re.match(regex, strToTest)
@@ -80,15 +94,15 @@ class Parser():
         self.selector = {}
         self.min = min
         # Processing
-        # try:
-        self.__creatIndentation()
-        self.__creatBlocks()
-        self.__toClass()
-        self.__toStr()
-        # except Exception as e:
-        #     print("[ERROR]: File can't be parsed.")
-        #     print(e)
-        #     exit()
+        try:
+            self.__creatIndentation()
+            self.__creatBlocks()
+            self.__toClass()
+            self.__toStr()
+        except Exception as e:
+            print("[ERROR]: File can't be parsed.")
+            print(e)
+            exit()
 
     def __creatIndentation(self):
         """
@@ -145,7 +159,7 @@ class Parser():
             for i in range(len(subject)):
                 if type(subject[i]) == str:
                     line = urllib.parse.unquote_plus(subject[i]).strip()
-                    isMatched = matchWith(line)
+                    isMatched = lineMatchWith(line)
                     if isMatched:
                         matchedRegex = isMatched[0]
                         matchedGroups = isMatched[1]
@@ -169,7 +183,7 @@ class Parser():
                                 condition=matchedGroups.group(1),
                                 content=parse(subject[i + 1])
                             )
-                        elif matchedRegex == "varriable":
+                        elif matchedRegex == "variable":
                             name = matchedGroups.group("name")
                             try:
                                 value = getattr(
@@ -275,7 +289,8 @@ class Parser():
                                     subject.index(i) - 1].selector
                                 if i.selector.strip(" ")[1:] == ":hover":
                                     toReturn += """onmouseover("{selector}",function (){{""".format(
-                                        selector=newSelector)
+                                        selector=newSelector
+                                    )
                                     for item in i.content:
                                         if item.type == "regle":
                                             selector = newSelector
@@ -306,7 +321,14 @@ class Parser():
                             if self.mode == "lax":
 
                                 toReturn += i.value
-                                toReturn += ("".join(list(map(lambda i: blockToJS(i), i.content))))
+                                toReturn += ("".join(
+                                    list(
+                                        map(
+                                            lambda i: blockToJS(i),
+                                             i.content)
+                                    )
+                                )
+                                )
 
                             elif self.mode == "strict":
                                 print("[ERROR]: \"" + i.value +
@@ -341,8 +363,8 @@ def compileProject(baseDir, destination=None, min=True):
     if os.path.exists(os.path.join(baseDir, "datas.json")):
         pass
         # TO DO => JINJA2 => TEMPLATE RENDER
-        ## template = Template('Hello {{ name }}!')
-        ## template.render(name='John Doe')
+        # template = Template('Hello {{ name }}!')
+        # template.render(name='John Doe')
 
     # Check if dir exists and make it
     if not destination:
